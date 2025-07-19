@@ -1,0 +1,897 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>团购商品选择</title>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <style>
+        :root{--primary-color:#4F46E5;--price-color:#D94635;--light-gray:#F3F4F6;--medium-gray:#6B7280;--border-color:#E5E7EB;--card-shadow:0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);}
+        body{font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;margin:0;background-color:var(--light-gray);color:#1F2937;}
+        .container{max-width:600px;margin:0 auto;padding:16px;}
+        .header{text-align:center;margin-bottom:24px;}
+        h1 { font-size: 1.5em; margin: 0.5em 0; }
+        .header p { color: #6c757d; }
+        .product-card{background-color:#fff;border-radius:12px;margin-bottom:16px;box-shadow:var(--card-shadow);overflow:hidden;}
+        .card-header{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border-color);}
+        .card-header img{width:60px;height:60px;border-radius:8px;object-fit:cover;margin-right:16px;flex-shrink:0;}
+        .no-image-placeholder{display:flex;align-items:center;justify-content:center;width:60px;height:60px;background-color:#E5E7EB;color:#9CA3AF;font-size:12px;border-radius:8px;margin-right:16px;flex-shrink:0;}
+        .product-name{font-size:1.1rem;font-weight:600;}
+        .card-body{padding:8px 16px;}
+        .info-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-color);}
+        .info-row:last-child{border-bottom:none;}
+        .label{color:var(--medium-gray);}
+        .value{font-weight:500;}
+        .price,.subtotal{color:var(--price-color);font-weight:600;}
+        .quantity-controls{display:flex;align-items:center;}
+        .quantity-controls input{width:40px;text-align:center;border:1px solid var(--border-color);border-radius:6px;padding:6px;margin:0 8px;font-size:1rem;-moz-appearance:textfield;}
+        .quantity-controls button{width:28px;height:28px;border-radius:50%;border:1px solid var(--medium-gray);background-color:#fff;color:var(--medium-gray);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
+        .quantity-controls .increase-btn{background-color:var(--primary-color);border-color:var(--primary-color);color:#fff;}
+        .footer{padding:16px;background-color:#fff;box-shadow:0 -4px 6px -1px rgba(0,0,0,0.1);position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;}
+        .total-price{font-size:1.1rem;font-weight:bold;}
+        .total-price span{color:var(--price-color);font-size:1.5rem;}
+        .submit-btn{padding:12px 24px;border:none;background-color:var(--primary-color);color:#fff;font-size:1rem;font-weight:500;border-radius:8px;cursor:pointer;}
+        .submit-btn:disabled{background-color:#A5B4FC;cursor:not-allowed;}
+        .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;visibility:hidden;transition:opacity 0.3s, visibility 0.3s;}
+        .modal-container{background:#fff;padding:24px;border-radius:12px;width:90%;max-width:400px;box-shadow:0 10px 25px rgba(0,0,0,0.1);transform:scale(0.9);transition:transform 0.3s;}
+        .modal-header{font-size:1.2rem;font-weight:600;margin-bottom:16px;text-align:center;}
+        .modal-body textarea{width:100%;height:150px;padding:10px;border:1px solid var(--border-color);border-radius:8px;font-size:0.9rem;line-height:1.5;resize:none;margin-bottom:16px;box-sizing:border-box;}
+        .modal-footer{display:flex;gap:10px;}
+        .modal-button{flex:1;padding:12px;border:none;border-radius:8px;font-size:1rem;font-weight:500;cursor:pointer;}
+        .copy-btn{background-color:var(--primary-color);color:#fff;}
+        .close-btn{background-color:var(--light-gray);color:var(--medium-gray);}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>团购商品选择</h1>
+            <p>请选择您需要的商品及数量</p>
+        </div>
+        <div id="product-list">
+        <div class="product-card" data-product-id="1">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E5%9C%9F%E8%B1%86.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">山东土豆</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥1.23</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="1">-</button>
+                        <input type="number" id="quantity-1" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="1">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-1">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="2">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%A5%BF%E7%BA%A2%E6%9F%BF.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">运城西红柿</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥1.54</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="2">-</button>
+                        <input type="number" id="quantity-2" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="2">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-2">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="3">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E5%A4%A7%E8%91%B1.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">本地大葱</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥1.80</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="3">-</button>
+                        <input type="number" id="quantity-3" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="3">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-3">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="4">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E6%B4%8B%E8%91%B1.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">洋葱</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥1.25</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="4">-</button>
+                        <input type="number" id="quantity-4" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="4">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-4">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="6">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%8F%9C%E8%8A%B1.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">菜花</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥2.30</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="6">-</button>
+                        <input type="number" id="quantity-6" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="6">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-6">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="8">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E9%B8%A1%E8%9B%8B.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">鸡蛋</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥5.20</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="8">-</button>
+                        <input type="number" id="quantity-8" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="8">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-8">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="9">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E5%A4%A7%E8%92%9C.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">大蒜</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥2.80</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="9">-</button>
+                        <input type="number" id="quantity-9" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="9">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-9">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="10">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E5%86%AC%E7%93%9C.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">冬瓜</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥1.20</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="10">-</button>
+                        <input type="number" id="quantity-10" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="10">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-10">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="11">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E5%8D%97%E7%93%9C.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">南瓜</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥1.80</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="11">-</button>
+                        <input type="number" id="quantity-11" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="11">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-11">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="12">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E5%9C%86%E7%99%BD%E8%8F%9C.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">圆白菜</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">南瓜.png</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥1.60</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="12">-</button>
+                        <input type="number" id="quantity-12" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="12">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-12">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="13">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E5%9C%86%E8%8C%84%E5%AD%90.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">圆茄子</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">南瓜.png</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥1.30</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="13">-</button>
+                        <input type="number" id="quantity-13" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="13">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-13">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="14">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E5%B0%96%E6%A4%92.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">尖椒</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥1.50</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="14">-</button>
+                        <input type="number" id="quantity-14" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="14">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-14">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="15">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E5%B9%B3%E8%8F%87.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">平菇</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥1.60</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="15">-</button>
+                        <input type="number" id="quantity-15" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="15">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-15">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="16">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E6%B2%B9%E9%BA%A6%E8%8F%9C.jpg" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">油麦菜</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥1.80</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="16">-</button>
+                        <input type="number" id="quantity-16" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="16">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-16">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="17">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E7%94%9F%E5%A7%9C.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">生姜</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥1.90</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="17">-</button>
+                        <input type="number" id="quantity-17" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="17">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-17">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="18">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E7%99%BD%E8%8F%9C.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">白菜</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥2.10</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="18">-</button>
+                        <input type="number" id="quantity-18" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="18">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-18">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="19">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E7%99%BD%E8%90%9D%E5%8D%9C.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">白萝卜</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥2.30</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="19">-</button>
+                        <input type="number" id="quantity-19" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="19">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-19">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="20">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%83%A1%E8%90%9D%E5%8D%9C.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">胡萝卜</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥1.10</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="20">-</button>
+                        <input type="number" id="quantity-20" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="20">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-20">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="21">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%8A%B9%E8%8F%9C.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">芹菜</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥1.22</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="21">-</button>
+                        <input type="number" id="quantity-21" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="21">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-21">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="22">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%8C%BC%E8%92%BF.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">茼蒿</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥3.20</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="22">-</button>
+                        <input type="number" id="quantity-22" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="22">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-22">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="23">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%8F%9C%E6%A4%92.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">菜椒</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥3.00</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="23">-</button>
+                        <input type="number" id="quantity-23" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="23">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-23">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="24">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%8F%A0%E8%8F%9C.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">菠菜</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥0.80</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="24">-</button>
+                        <input type="number" id="quantity-24" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="24">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-24">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="25">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%92%9C%E8%8B%97.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">蒜苗</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥2.90</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="25">-</button>
+                        <input type="number" id="quantity-25" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="25">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-25">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="26">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%92%9C%E8%96%B9.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">蒜薹</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥3.05</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="26">-</button>
+                        <input type="number" id="quantity-26" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="26">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-26">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="27">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%A5%BF%E8%91%AB%E8%8A%A6.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">西葫芦</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥1.70</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="27">-</button>
+                        <input type="number" id="quantity-27" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="27">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-27">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="28">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%A5%BF%E8%93%9D%E8%8A%B1.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">西蓝花</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥2.10</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="28">-</button>
+                        <input type="number" id="quantity-28" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="28">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-28">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="29">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%B1%86%E8%8A%BD.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">豆芽</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥2.40</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="29">-</button>
+                        <input type="number" id="quantity-29" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="29">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-29">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="30">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%B1%86%E8%A7%92.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">豆角</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥2.20</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="30">-</button>
+                        <input type="number" id="quantity-30" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="30">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-30">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="31">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E9%87%91%E9%92%88%E8%8F%87.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">金针菇</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥2.40</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="31">-</button>
+                        <input type="number" id="quantity-31" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="31">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-31">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="32">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E9%87%91%E9%92%88%E8%8F%87.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">金针菇</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥2.40</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="32">-</button>
+                        <input type="number" id="quantity-32" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="32">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-32">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="33">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E9%95%BF%E8%8C%84%E5%AD%90.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">长茄子</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥1.40</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="33">-</button>
+                        <input type="number" id="quantity-33" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="33">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-33">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="34">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E9%9D%92%E6%A4%92%20.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">青椒</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥2.40</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="34">-</button>
+                        <input type="number" id="quantity-34" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="34">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-34">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="35">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E9%9F%AD%E8%8F%9C.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">韭菜</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥1.10</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="35">-</button>
+                        <input type="number" id="quantity-35" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="35">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-35">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="36">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E9%A6%99%E8%8F%87.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">香菇</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥3.00</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="36">-</button>
+                        <input type="number" id="quantity-36" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="36">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-36">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="38">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E9%A6%99%E8%8F%9C.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">香菜</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥2.40</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="38">-</button>
+                        <input type="number" id="quantity-38" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="38">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-38">¥0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="product-card" data-product-id="39">
+            <div class="card-header">
+                <img src="https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E9%BB%84%E7%93%9C.png" alt="无图" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="no-image-placeholder" style="display:none;">无图</div>
+                <div class="product-name">黄瓜</div>
+            </div>
+            <div class="card-body">
+                <div class="info-row"><span class="label">重量</span><span class="value">500g</span></div>
+                <div class="info-row"><span class="label">单价</span><span class="value price">¥3.50</span></div>
+                <div class="info-row">
+                    <span class="label">数量</span>
+                    <div class="quantity-controls">
+                        <button class="decrease-btn" data-id="39">-</button>
+                        <input type="number" id="quantity-39" value="0" min="0" readonly>
+                        <button class="increase-btn" data-id="39">+</button>
+                    </div>
+                </div>
+                <div class="info-row subtotal-row"><span class="label">小计</span><span class="value subtotal" id="subtotal-39">¥0.00</span></div>
+            </div>
+        </div>
+        </div>
+        <div style="height: 120px;"></div>
+    </div>
+    <div id="orderModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">请复制您的订单信息</div>
+            <div class="modal-body">
+                <textarea id="orderSummaryText" readonly></textarea>
+            </div>
+            <div class="modal-footer">
+                <button id="closeModalBtn" class="modal-button close-btn">关闭</button>
+                <button id="copyOrderBtn" class="modal-button copy-btn">一键复制</button>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        <div class="total-price">总计：<span id="totalPrice">¥0.00</span></div>
+        <button type="button" id="submitOrderBtn" class="submit-btn">提交订单</button>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const products = [{"id": 1, "name": "山东土豆", "weight": "500g", "price": 1.23, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E5%9C%9F%E8%B1%86.png"}, {"id": 2, "name": "运城西红柿", "weight": "500g", "price": 1.54, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%A5%BF%E7%BA%A2%E6%9F%BF.png"}, {"id": 3, "name": "本地大葱", "weight": "500g", "price": 1.8, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E5%A4%A7%E8%91%B1.png"}, {"id": 4, "name": "洋葱", "weight": "500g", "price": 1.25, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E6%B4%8B%E8%91%B1.png"}, {"id": 6, "name": "菜花", "weight": "500g", "price": 2.3, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%8F%9C%E8%8A%B1.png"}, {"id": 8, "name": "鸡蛋", "weight": "500g", "price": 5.2, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E9%B8%A1%E8%9B%8B.png"}, {"id": 9, "name": "大蒜", "weight": "500g", "price": 2.8, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E5%A4%A7%E8%92%9C.png"}, {"id": 10, "name": "冬瓜", "weight": "500g", "price": 1.2, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E5%86%AC%E7%93%9C.png"}, {"id": 11, "name": "南瓜", "weight": "500g", "price": 1.8, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E5%8D%97%E7%93%9C.png"}, {"id": 12, "name": "圆白菜", "weight": "南瓜.png", "price": 1.6, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E5%9C%86%E7%99%BD%E8%8F%9C.png"}, {"id": 13, "name": "圆茄子", "weight": "南瓜.png", "price": 1.3, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E5%9C%86%E8%8C%84%E5%AD%90.png"}, {"id": 14, "name": "尖椒", "weight": "500g", "price": 1.5, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E5%B0%96%E6%A4%92.png"}, {"id": 15, "name": "平菇", "weight": "500g", "price": 1.6, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E5%B9%B3%E8%8F%87.png"}, {"id": 16, "name": "油麦菜", "weight": "500g", "price": 1.8, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E6%B2%B9%E9%BA%A6%E8%8F%9C.jpg"}, {"id": 17, "name": "生姜", "weight": "500g", "price": 1.9, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E7%94%9F%E5%A7%9C.png"}, {"id": 18, "name": "白菜", "weight": "500g", "price": 2.1, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E7%99%BD%E8%8F%9C.png"}, {"id": 19, "name": "白萝卜", "weight": "500g", "price": 2.3, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E7%99%BD%E8%90%9D%E5%8D%9C.png"}, {"id": 20, "name": "胡萝卜", "weight": "500g", "price": 1.1, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%83%A1%E8%90%9D%E5%8D%9C.png"}, {"id": 21, "name": "芹菜", "weight": "500g", "price": 1.22, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%8A%B9%E8%8F%9C.png"}, {"id": 22, "name": "茼蒿", "weight": "500g", "price": 3.2, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%8C%BC%E8%92%BF.png"}, {"id": 23, "name": "菜椒", "weight": "500g", "price": 3.0, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%8F%9C%E6%A4%92.png"}, {"id": 24, "name": "菠菜", "weight": "500g", "price": 0.8, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%8F%A0%E8%8F%9C.png"}, {"id": 25, "name": "蒜苗", "weight": "500g", "price": 2.9, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%92%9C%E8%8B%97.png"}, {"id": 26, "name": "蒜薹", "weight": "500g", "price": 3.05, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%92%9C%E8%96%B9.png"}, {"id": 27, "name": "西葫芦", "weight": "500g", "price": 1.7, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%A5%BF%E8%91%AB%E8%8A%A6.png"}, {"id": 28, "name": "西蓝花", "weight": "500g", "price": 2.1, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%A5%BF%E8%93%9D%E8%8A%B1.png"}, {"id": 29, "name": "豆芽", "weight": "500g", "price": 2.4, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%B1%86%E8%8A%BD.png"}, {"id": 30, "name": "豆角", "weight": "500g", "price": 2.2, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E8%B1%86%E8%A7%92.png"}, {"id": 31, "name": "金针菇", "weight": "500g", "price": 2.4, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E9%87%91%E9%92%88%E8%8F%87.png"}, {"id": 32, "name": "金针菇", "weight": "500g", "price": 2.4, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E9%87%91%E9%92%88%E8%8F%87.png"}, {"id": 33, "name": "长茄子", "weight": "500g", "price": 1.4, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E9%95%BF%E8%8C%84%E5%AD%90.png"}, {"id": 34, "name": "青椒", "weight": "500g", "price": 2.4, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E9%9D%92%E6%A4%92%20.png"}, {"id": 35, "name": "韭菜", "weight": "500g", "price": 1.1, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E9%9F%AD%E8%8F%9C.png"}, {"id": 36, "name": "香菇", "weight": "500g", "price": 3.0, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E9%A6%99%E8%8F%87.png"}, {"id": 38, "name": "香菜", "weight": "500g", "price": 2.4, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E9%A6%99%E8%8F%9C.png"}, {"id": 39, "name": "黄瓜", "weight": "500g", "price": 3.5, "image": "https://gitee.com/vegetable-warehouse_0/wo-wan-wan/raw/master/images/%E9%BB%84%E7%93%9C.png"}];
+        const cart = {};
+        const totalPriceElement = document.getElementById('totalPrice');
+        const submitOrderBtn = document.getElementById('submitOrderBtn');
+        const modal = document.getElementById('orderModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const copyOrderBtn = document.getElementById('copyOrderBtn');
+        const orderSummaryTextarea = document.getElementById('orderSummaryText');
+        function getProductById(id) { return products.find(p => p.id == id); }
+        function updateTotalPrice() {
+            let total = 0;
+            products.forEach(product => {
+                const quantity = cart[product.id] || 0;
+                total += product.price * quantity;
+            });
+            totalPriceElement.textContent = '¥' + total.toFixed(2);
+        }
+        function changeQuantity(productId, change) {
+            const currentQuantity = cart[productId] || 0;
+            const newQuantity = currentQuantity + change;
+            if (newQuantity >= 0) {
+                cart[productId] = newQuantity;
+                document.getElementById(`quantity-${productId}`).value = newQuantity;
+                const product = getProductById(productId);
+                document.getElementById(`subtotal-${productId}`).textContent = '¥' + (product.price * newQuantity).toFixed(2);
+                updateTotalPrice();
+            }
+        }
+        document.getElementById('product-list').addEventListener('click', function(event) {
+            const button = event.target.closest('.increase-btn, .decrease-btn');
+            if (button) {
+                changeQuantity(button.dataset.id, button.classList.contains('increase-btn') ? 1 : -1);
+            }
+        });
+        submitOrderBtn.addEventListener('click', function() {
+            const activeCartItems = Object.entries(cart).filter(([id, quantity]) => quantity > 0);
+            if (activeCartItems.length === 0) { return alert("您的购物车是空的！"); }
+            let summary = '--- 团购商品选择 ---\n';
+            activeCartItems.forEach(([id, quantity]) => {
+                const product = getProductById(id);
+                summary += `${product.name} (${product.weight}) x ${quantity} = ¥${(product.price * quantity).toFixed(2)}\n`;
+            });
+            summary += '--------------------\n';
+            summary += `总价: ${totalPriceElement.textContent}`;
+            orderSummaryTextarea.value = summary;
+            modal.style.opacity = '1';
+            modal.style.visibility = 'visible';
+            modal.querySelector('.modal-container').style.transform = 'scale(1)';
+        });
+        closeModalBtn.addEventListener('click', function() {
+            modal.style.opacity = '0';
+            modal.style.visibility = 'hidden';
+            modal.querySelector('.modal-container').style.transform = 'scale(0.9)';
+        });
+        copyOrderBtn.addEventListener('click', function() {
+            orderSummaryTextarea.select();
+            document.execCommand('copy');
+            copyOrderBtn.textContent = '复制成功!';
+            setTimeout(() => {
+                copyOrderBtn.textContent = '一键复制';
+                closeModalBtn.click();
+            }, 1500);
+        });
+        updateTotalPrice();
+    });
+    </script>
+</body>
+</html>
+    
